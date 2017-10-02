@@ -116,7 +116,10 @@ public class BaseDao<T> implements IBaseDao<T> {
         hql = initSort(hql, sort, desc);
 
         Query countQuery = getSession().createQuery(countHql);
-        Query query = getSession().createQuery(hql).setMaxResults(pageSize).setFirstResult(offset);
+        Query query = getSession()
+                .createQuery(hql)
+                .setMaxResults(pageSize)// 每页显示的条数
+                .setFirstResult(offset);// 根据页码计算出来的每页的收条记录的索引
 
         setParameter(countQuery, args);
         setParameter(query, args);
@@ -260,9 +263,8 @@ public class BaseDao<T> implements IBaseDao<T> {
 
     protected void setParameter(Query query, Object[] args) {
         if (args != null && args.length > 0) {
-            int index = 0;
-            for (Object arg : args) {
-                query.setParameter(index++, arg);
+            for (int i = 0; i < args.length; i++) {
+                query.setParameter(i + 1, args[i]);
             }
         }
     }
@@ -270,14 +272,15 @@ public class BaseDao<T> implements IBaseDao<T> {
 
     @Override
     public void executeSql(String sql) {
-        SQLQuery query = getSession().createSQLQuery(sql);
-        query.executeUpdate();
+        executeSql(sql, null);
     }
 
     @Override
     public void executeSql(String sql, Object[] args) {
         SQLQuery query = getSession().createSQLQuery(sql);
-        setParameter(query, args);
+        if (args != null) {
+            setParameter(query, args);
+        }
         query.executeUpdate();
     }
 
